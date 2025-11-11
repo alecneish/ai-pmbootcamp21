@@ -2,9 +2,18 @@
 let supabaseClient = null;
 let currentUserCode = null;
 
+// Check if Supabase configuration is valid
+function isSupabaseConfigured() {
+    return typeof SUPABASE_CONFIG !== 'undefined' &&
+           SUPABASE_CONFIG.url &&
+           SUPABASE_CONFIG.anonKey &&
+           SUPABASE_CONFIG.url !== 'YOUR_SUPABASE_URL' &&
+           SUPABASE_CONFIG.anonKey !== 'YOUR_SUPABASE_ANON_KEY';
+}
+
 // Initialize Supabase client
 function initSupabase() {
-    if (typeof SUPABASE_CONFIG === 'undefined' || !isSupabaseConfigured()) {
+    if (!isSupabaseConfigured()) {
         console.warn('Supabase not configured. Database features will be disabled.');
         return;
     }
