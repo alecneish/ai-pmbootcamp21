@@ -7,6 +7,7 @@
     <meta name="author" content="Fitness Meal Planner">
     <title>Fitness Meal Planner</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
@@ -62,6 +63,21 @@
                     <option value="1.725">Very Active (exercise 6-7 days/week)</option>
                     <option value="1.9">Extremely Active (athlete or physical job)</option>
                 </select>
+            </div>
+
+            <div class="profile-actions">
+                <div class="profile-code-display" id="profileCodeDisplay" style="display: none;">
+                    <span class="code-label">Your Profile Code:</span>
+                    <span class="code-value" id="userCodeValue"></span>
+                    <button type="button" class="copy-btn" id="copyCodeBtn">Copy</button>
+                </div>
+                <div class="profile-buttons">
+                    <button type="button" class="secondary-btn" id="saveProfileBtn">Save Profile</button>
+                    <div class="load-profile-group">
+                        <input type="text" id="loadCodeInput" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}">
+                        <button type="button" class="secondary-btn" id="loadProfileBtn">Load Profile</button>
+                    </div>
+                </div>
             </div>
 
             <h3 class="section-title">Meal Preferences</h3>
@@ -127,6 +143,11 @@
 
             <div id="mealCards"></div>
 
+            <div class="save-plan-section">
+                <button class="save-plan-btn" id="savePlanBtn">💾 Save This Meal Plan</button>
+                <p class="save-plan-note">Saved plans can be viewed anytime with your profile code</p>
+            </div>
+
             <div class="calendar-section">
                 <h3>📅 Export to Calendar</h3>
                 <p>Add meal reminders to your calendar to stay on track!</p>
@@ -139,6 +160,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

@@ -25,6 +25,12 @@ A modern, personalized meal planning web application that generates custom meal 
 - **Meal Reminders**: 30-minute advance notifications
 - **Scheduled Times**: Breakfast (8:00 AM), Lunch (12:30 PM), Dinner (6:30 PM)
 
+### Database Features (Supabase)
+- **User Profiles**: Save your personal information with a unique 6-digit code
+- **Profile Loading**: Load your profile from any device using your code
+- **Saved Meal Plans**: Store your generated meal plans in the cloud
+- **No Authentication**: Simple code-based system, no account required
+
 ### Professional Design
 - **Minimalist UI**: Clean black, white, and grey color scheme
 - **Responsive Layout**: Works seamlessly on desktop, tablet, and mobile
@@ -50,28 +56,47 @@ cd fitness-meal-planner
 ### Option 2: Download ZIP
 Download the latest release and extract the files.
 
+### Option 3: Setup with Database Features
+To enable database features (save/load profiles and meal plans):
+1. Follow Option 1 or 2 above
+2. See [Supabase Setup](#supabase-setup-optional) section below
+3. Configure your `config.js` file
+
 ## Usage
 
 1. Open `index.html` in your web browser
 2. Fill in your personal information:
    - Age, gender, height, weight
    - Activity level
-3. Select your fitness goal and daily budget
-4. Click "Generate Meal Plan"
-5. View your personalized meal plan with calorie calculations
-6. Export to your calendar using the download button
+3. (Optional) Click "Save Profile" to get a 6-digit code for future use
+4. Select your fitness goal and daily budget
+5. Click "Generate Meal Plan"
+6. View your personalized meal plan with calorie calculations
+7. (Optional) Click "Save This Meal Plan" to store it in the database
+8. Export to your calendar using the download button
+
+### Loading a Saved Profile
+- Enter your 6-digit code in the "Load Profile" section
+- Click "Load Profile" to auto-fill your information
+- Your code is saved in your browser for easy access
 
 ## Project Structure
 
 ```
 fitness-meal-planner/
-├── index.html          # Main HTML file
-├── styles.css          # All styling
-├── script.js           # Application logic
-├── design.md           # Design documentation
-├── requirements.md     # Requirements specification
-├── tasks.md            # Development tasks
-└── README.md           # This file
+├── index.html              # Main HTML file
+├── styles.css              # All styling
+├── script.js               # Application logic
+├── config.js               # Supabase configuration (not in repo)
+├── config.example.js       # Example configuration template
+├── supabase-schema.sql     # Database schema for Supabase
+├── design.md               # Design documentation
+├── requirements.md         # Requirements specification
+├── tasks.md                # Development tasks
+├── CLAUDE.md               # Codebase documentation
+├── LICENSE                 # MIT License
+├── .gitignore              # Git ignore rules
+└── README.md               # This file
 ```
 
 ## Technologies Used
@@ -79,6 +104,7 @@ fitness-meal-planner/
 - **HTML5**: Semantic markup
 - **CSS3**: Grid, Flexbox, animations
 - **JavaScript (ES6+)**: Vanilla JS, no frameworks
+- **Supabase**: PostgreSQL database with real-time capabilities
 - **Google Calendar API**: Optional calendar integration
 
 ## Calorie Calculation Formulas
@@ -130,6 +156,47 @@ TDEE = BMR × Activity Level Multiplier
 vercel deploy
 ```
 
+## Supabase Setup (Optional)
+
+To enable database features (profile saving and meal plan storage):
+
+1. **Create a Supabase Account**
+   - Go to [supabase.com](https://supabase.com)
+   - Sign up for a free account
+
+2. **Create a New Project**
+   - Click "New Project"
+   - Choose an organization
+   - Enter a project name, database password, and region
+
+3. **Run the Database Schema**
+   - Go to the SQL Editor in your Supabase dashboard
+   - Copy the contents of `supabase-schema.sql`
+   - Paste and run the SQL script
+
+4. **Get Your API Credentials**
+   - Go to Settings → API
+   - Copy your project URL and anon/public key
+
+5. **Create Configuration File**
+   ```bash
+   cp config.example.js config.js
+   ```
+   - Open `config.js` and add your credentials:
+   ```javascript
+   const SUPABASE_CONFIG = {
+       url: 'your-project-url.supabase.co',
+       anonKey: 'your-anon-key'
+   };
+   ```
+
+6. **Test the Integration**
+   - Open `index.html` in your browser
+   - Fill in your information and click "Save Profile"
+   - You should receive a 6-digit code
+
+For detailed step-by-step instructions with screenshots, see [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
+
 ## Google Calendar API Setup (Optional)
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com)
@@ -151,12 +218,14 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Future Enhancements
 
+- [ ] View saved meal plans history
+- [ ] Custom meal creation and storage
+- [ ] Favorite meals functionality
 - [ ] Weekly meal planning
 - [ ] Shopping list generation
 - [ ] Recipe instructions
 - [ ] Meal customization and swapping
 - [ ] Allergen filtering
-- [ ] User accounts
 - [ ] Metric unit support
 
 ## License
@@ -177,7 +246,14 @@ Project Link: [https://github.com/alecneish/fitness-meal-planner](https://github
 
 ## Version History
 
-### v2.0 (Current)
+### v3.0 (Current)
+- Supabase database integration
+- User profile save/load with 6-digit codes
+- Meal plan storage in the cloud
+- No authentication required
+- LocalStorage for code persistence
+
+### v2.0
 - Added personalized calorie calculations (BMR, TDEE)
 - Personal information input form
 - Calorie information display

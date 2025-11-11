@@ -1,3 +1,228 @@
+// ===== SUPABASE SETUP =====
+let supabaseClient = null;
+let currentUserCode = null;
+
+// Initialize Supabase client
+function initSupabase() {
+    if (typeof SUPABASE_CONFIG === 'undefined' || !isSupabaseConfigured()) {
+        console.warn('Supabase not configured. Database features will be disabled.');
+        return;
+    }
+
+    try {
+        const { createClient } = supabase;
+        supabaseClient = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        console.log('Supabase initialized successfully');
+
+        // Check for saved user code in localStorage
+        const savedCode = localStorage.getItem('userCode');
+        if (savedCode) {
+            currentUserCode = savedCode;
+            displayUserCode(savedCode);
+        }
+    } catch (error) {
+        console.error('Failed to initialize Supabase:', error);
+    }
+}
+
+// Generate a random 6-digit code
+function generateUserCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Display user code in UI
+function displayUserCode(code) {
+    document.getElementById('userCodeValue').textContent = code;
+    document.getElementById('profileCodeDisplay').style.display = 'flex';
+}
+
+// Check if Supabase is available
+function isSupabaseAvailable() {
+    return supabaseClient !== null;
+}
+
+// ===== USER PROFILE FUNCTIONS =====
+
+// Save user profile to Supabase
+async function saveUserProfile() {
+    if (!isSupabaseAvailable()) {
+        alert('Database not configured. Please set up Supabase to use this feature.');
+        return;
+    }
+
+    // Get form values
+    const age = parseInt(document.getElementById('age').value);
+    const gender = document.getElementById('gender').value;
+    const heightFeet = parseInt(document.getElementById('heightFeet').value);
+    const heightInches = parseInt(document.getElementById('heightInches').value);
+    const weight = parseFloat(document.getElementById('weight').value);
+    const activityLevel = parseFloat(document.getElementById('activityLevel').value);
+
+    // Validate required fields
+    if (!age || !gender || !heightFeet || heightInches === '' || !weight || !activityLevel) {
+        alert('Please fill in all personal information fields before saving.');
+        return;
+    }
+
+    try {
+        // Generate new code if user doesn't have one
+        if (!currentUserCode) {
+            currentUserCode = generateUserCode();
+        }
+
+        // Check if profile already exists
+        const { data: existing } = await supabaseClient
+            .from('user_profiles')
+            .select('id')
+            .eq('user_code', currentUserCode)
+            .single();
+
+        const profileData = {
+            user_code: currentUserCode,
+            age,
+            gender,
+            height_feet: heightFeet,
+            height_inches: heightInches,
+            weight,
+            activity_level: activityLevel
+        };
+
+        if (existing) {
+            // Update existing profile
+            const { error } = await supabaseClient
+                .from('user_profiles')
+                .update(profileData)
+                .eq('user_code', currentUserCode);
+
+            if (error) throw error;
+            alert('Profile updated successfully!');
+        } else {
+            // Insert new profile
+            const { error } = await supabaseClient
+                .from('user_profiles')
+                .insert([profileData]);
+
+            if (error) throw error;
+            alert(`Profile saved! Your code is: ${currentUserCode}\n\nSave this code to load your profile later.`);
+        }
+
+        // Save code to localStorage
+        localStorage.setItem('userCode', currentUserCode);
+        displayUserCode(currentUserCode);
+
+    } catch (error) {
+        console.error('Error saving profile:', error);
+        alert('Failed to save profile. Please try again.');
+    }
+}
+
+// Load user profile from Supabase
+async function loadUserProfile() {
+    if (!isSupabaseAvailable()) {
+        alert('Database not configured. Please set up Supabase to use this feature.');
+        return;
+    }
+
+    const code = document.getElementById('loadCodeInput').value.trim();
+
+    if (!code || code.length !== 6) {
+        alert('Please enter a valid 6-digit code.');
+        return;
+    }
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('user_profiles')
+            .select('*')
+            .eq('user_code', code)
+            .single();
+
+        if (error) throw error;
+
+        if (data) {
+            // Fill form with loaded data
+            document.getElementById('age').value = data.age;
+            document.getElementById('gender').value = data.gender;
+            document.getElementById('heightFeet').value = data.height_feet;
+            document.getElementById('heightInches').value = data.height_inches;
+            document.getElementById('weight').value = data.weight;
+            document.getElementById('activityLevel').value = data.activity_level;
+
+            // Set current user code
+            currentUserCode = code;
+            localStorage.setItem('userCode', code);
+            displayUserCode(code);
+
+            alert('Profile loaded successfully!');
+            document.getElementById('loadCodeInput').value = '';
+        }
+
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        alert('Profile not found. Please check your code and try again.');
+    }
+}
+
+// Copy user code to clipboard
+function copyUserCode() {
+    const code = document.getElementById('userCodeValue').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyCodeBtn');
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => {
+            btn.textContent = originalText;
+        }, 2000);
+    });
+}
+
+// ===== MEAL PLAN SAVE/LOAD FUNCTIONS =====
+
+// Save current meal plan to Supabase
+async function saveMealPlan() {
+    if (!isSupabaseAvailable()) {
+        alert('Database not configured. Please set up Supabase to use this feature.');
+        return;
+    }
+
+    if (!currentUserCode) {
+        alert('Please save your profile first to get a user code.');
+        return;
+    }
+
+    if (!window.currentMealPlan || window.currentMealPlan.length === 0) {
+        alert('No meal plan to save. Please generate a meal plan first.');
+        return;
+    }
+
+    // Get the current plan data
+    const goal = document.getElementById('fitnessGoal').value;
+    const budget = parseFloat(document.getElementById('budget').value);
+    const tdee = parseInt(document.getElementById('tdeeValue').textContent.replace(/,/g, ''));
+    const targetCalories = parseInt(document.getElementById('targetValue').textContent.replace(/,/g, ''));
+
+    try {
+        const { error } = await supabaseClient
+            .from('saved_meal_plans')
+            .insert([{
+                user_code: currentUserCode,
+                goal,
+                budget,
+                tdee,
+                target_calories: targetCalories,
+                meals: window.currentMealPlan
+            }]);
+
+        if (error) throw error;
+
+        alert('Meal plan saved successfully!');
+
+    } catch (error) {
+        console.error('Error saving meal plan:', error);
+        alert('Failed to save meal plan. Please try again.');
+    }
+}
+
 // Meal database organized by goal and budget tier
 const mealDatabase = {
     'weight-loss': {
@@ -458,5 +683,18 @@ function downloadFile(content, filename, mimeType) {
     URL.revokeObjectURL(url);
 }
 
-// Load Google API on page load
-window.addEventListener('load', loadGoogleAPI);
+// ===== EVENT LISTENERS =====
+
+// Profile management buttons
+document.getElementById('saveProfileBtn').addEventListener('click', saveUserProfile);
+document.getElementById('loadProfileBtn').addEventListener('click', loadUserProfile);
+document.getElementById('copyCodeBtn').addEventListener('click', copyUserCode);
+
+// Meal plan save button
+document.getElementById('savePlanBtn').addEventListener('click', saveMealPlan);
+
+// Initialize on page load
+window.addEventListener('load', () => {
+    initSupabase();
+    loadGoogleAPI();
+});
